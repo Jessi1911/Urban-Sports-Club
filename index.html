@@ -817,7 +817,10 @@ const gmap = a => 'https://maps.google.com/?q=' + encodeURIComponent(a);
 function toUserId(name, email) {
   const slug = s => s.toLowerCase().trim()
     .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
-    .replace(/\s+/g,'-').replace(/[^a-z0-9@._-]/g,'');
+    .replace(/[@.\s]/g,'-')         // @ und . durch Bindestrich ersetzen
+    .replace(/[^a-z0-9-]/g,'')     // alle anderen Sonderzeichen entfernen
+    .replace(/-+/g,'-')            // mehrfache Bindestriche zusammenfassen
+    .replace(/^-|-$/g,'');         // führende/abschließende Bindestriche entfernen
   return (slug(name) + '--' + slug(email)) || 'user';
 }
 
