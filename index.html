@@ -252,41 +252,6 @@
     }
     .hero-desc strong { color: var(--white); font-weight: 500; }
 
-    /* ════════════════════════════════════
-       CATEGORY SCROLL STRIP
-    ════════════════════════════════════ */
-    #strip {
-        background: var(--navy-deep);
-        border-bottom: 1px solid var(--line);
-        overflow-x: auto; -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-    #strip::-webkit-scrollbar { display: none; }
-    .strip-inner { display: flex; min-width: max-content; }
-    .strip-item {
-        display: flex; align-items: center; gap: 10px;
-        padding: 15px 22px;
-        border-right: 1px solid var(--line);
-        color: var(--muted); font-size: 12px;
-        font-weight: 600; letter-spacing: 0.06em;
-        text-transform: uppercase; white-space: nowrap;
-        transition: all 0.18s; cursor: pointer; position: relative;
-    }
-    .strip-item:first-child { border-left: 1px solid var(--line); }
-    .strip-item .snum {
-        font-family: var(--f-display); font-size: 20px;
-        color: var(--line); line-height: 1; transition: color 0.18s;
-    }
-    .strip-item:hover { color: var(--white); background: var(--dim); }
-    .strip-item:hover .snum { color: var(--cat); }
-    /* done state */
-    .strip-item.done { color: var(--mint); }
-    .strip-item.done .snum { color: var(--mint); }
-    .strip-item.done::after {
-        content: '✓';
-        font-size: 10px; font-weight: 700;
-        color: var(--mint); margin-left: -4px;
-    }
 
     /* ════════════════════════════════════
        INTRO BLOCK
@@ -527,9 +492,6 @@
         </div>
     </div>
 </section>
-
-<!-- ── STRIP ── -->
-<div id="strip"><div class="strip-inner" id="strip-inner"></div></div>
 
 <!-- ── INTRO ── -->
 <section id="intro">
@@ -862,7 +824,6 @@ function toggleDone(catId) {
 function applyDoneUI(catId, done) {
   const sec = document.getElementById(catId);
   const btn = document.getElementById('done-' + catId);
-  const strip = document.querySelector(`.strip-item[data-cat="${catId}"]`);
   const navNum = document.querySelector(`.nav-num[data-id="${catId}"]`);
   if (sec)    sec.classList.toggle('done', done);
   if (btn)  { btn.classList.toggle('done', done); btn.innerHTML = done
@@ -870,7 +831,6 @@ function applyDoneUI(catId, done) {
     : `<i data-lucide="circle" style="width:13px;height:13px"></i> Als erledigt markieren`;
     lucide.createIcons({ nodes: [btn] });
   }
-  if (strip)  strip.classList.toggle('done', done);
   if (navNum) navNum.classList.toggle('done', done);
 }
 
@@ -904,17 +864,6 @@ function buildNav() {
   });
 }
 
-function buildStrip() {
-  const si = document.getElementById('strip-inner');
-  CATS.forEach(c => {
-    const a = document.createElement('a');
-    a.className = 'strip-item'; a.href = '#' + c.id;
-    a.dataset.cat = c.id;
-    a.style.setProperty('--cat', c.color);
-    a.innerHTML = `<span class="snum">${c.num}</span><i data-lucide="${c.icon}" style="width:13px;height:13px;color:${c.color}"></i>${c.name}`;
-    si.appendChild(a);
-  });
-}
 
 function buildCats() {
   const cont = document.getElementById('cat-container');
@@ -1051,7 +1000,7 @@ function initBurger() {
 ══════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   initFirebase();
-  buildNav(); buildStrip(); buildCats();
+  buildNav(); buildCats();
   lucide.createIcons();
   initSpy(); initReveal(); initBurger();
   initUserModal();
