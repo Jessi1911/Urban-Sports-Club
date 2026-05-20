@@ -8,6 +8,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -442,6 +445,88 @@
         .modal-card { padding: 28px 24px 24px; }
     }
 
+    /* Leaflet-Resets überschreiben damit Lucide-Icons erhalten bleiben */
+    .leaflet-container svg { display: initial; }
+    [data-lucide], [data-lucide] svg { display: inline-block !important; }
+
+    /* ════════════════════════════════════
+       MAP OVERLAY
+    ════════════════════════════════════ */
+    #map-overlay {
+        position: fixed; inset: 0; z-index: 800;
+        background: var(--navy-deep);
+        display: none; flex-direction: column;
+    }
+    #map-overlay.open { display: flex; }
+    .map-topbar {
+        display: flex; align-items: center; gap: 16px;
+        padding: 0 32px; height: 52px; flex-shrink: 0;
+        background: rgba(15,15,31,0.98);
+        border-bottom: 1px solid var(--line);
+    }
+    .map-title {
+        font-family: var(--f-display); font-size: 22px;
+        color: var(--white); letter-spacing: 0.06em; flex-shrink: 0;
+    }
+    .map-filters { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: 1; }
+    .map-filter {
+        padding: 4px 12px; border-radius: 3px;
+        border: 1px solid var(--line); background: none;
+        color: var(--muted); font-size: 11px; font-weight: 600;
+        letter-spacing: 0.06em; text-transform: uppercase;
+        cursor: pointer; transition: all 0.18s; white-space: nowrap;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .map-filter:hover { color: var(--white); border-color: rgba(255,255,255,0.3); }
+    .map-filter.active { color: var(--navy-deep); border-color: transparent; }
+    .map-close {
+        background: none; border: 1px solid var(--line); color: var(--muted);
+        padding: 4px 14px; border-radius: 4px; cursor: pointer;
+        font-size: 12px; transition: all 0.2s; flex-shrink: 0;
+    }
+    .map-close:hover { border-color: var(--mint); color: var(--white); }
+    #the-map { flex: 1; }
+    /* Custom Leaflet pin */
+    .mp {
+        width: 34px; height: 34px;
+        background: #0F0F1F;
+        border: 2px solid var(--c);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        transition: transform 0.15s;
+    }
+    .mp:hover { transform: scale(1.2); }
+    .mp svg { width: 14px; height: 14px; color: var(--c); stroke: var(--c); }
+    /* Leaflet popup dark theme */
+    .leaflet-popup-content-wrapper {
+        background: #16213E !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        border-radius: 8px !important;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+        color: #fff !important;
+    }
+    .leaflet-popup-tip { background: #16213E !important; }
+    .leaflet-popup-content { margin: 14px 16px !important; }
+    .pop-cat { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+    .pop-name { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .pop-addr { font-size: 11px; color: #7A8494; margin-bottom: 10px; line-height: 1.4; }
+    .pop-links { display: flex; gap: 8px; }
+    .pop-link {
+        font-size: 11px; font-weight: 600; padding: 4px 10px;
+        border-radius: 4px; border: 1px solid rgba(255,255,255,0.12);
+        color: #D4D8E0; text-decoration: none; transition: all 0.15s;
+    }
+    .pop-link:hover { border-color: #2ECC9A; color: #2ECC9A; }
+    /* Nav map button */
+    #nav-map {
+        background: none; border: 1px solid var(--line); color: var(--muted);
+        padding: 4px 12px; border-radius: 4px; cursor: pointer;
+        font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+        text-transform: uppercase; transition: all 0.2s; flex-shrink: 0;
+    }
+    #nav-map:hover { border-color: var(--mint); color: var(--mint); }
+
     /* ════════════════════════════════════
        ADMIN OVERLAY
     ════════════════════════════════════ */
@@ -524,6 +609,16 @@
     </div>
 </div>
 
+<!-- ── MAP OVERLAY ── -->
+<div id="map-overlay">
+    <div class="map-topbar">
+        <span class="map-title">Standorte</span>
+        <div class="map-filters" id="map-filters"></div>
+        <button class="map-close" onclick="closeMap()">✕ Schließen</button>
+    </div>
+    <div id="the-map"></div>
+</div>
+
 <!-- ── ADMIN OVERLAY ── -->
 <div id="admin-overlay">
     <div class="admin-wrap">
@@ -552,6 +647,7 @@
             <span class="nav-progress" id="nav-progress">0/8</span>
             <button class="nav-change" id="nav-change" title="Name ändern">· wechseln</button>
         </div>
+        <button id="nav-map" onclick="openMap()">Karte</button>
         <button id="nav-admin" onclick="openAdmin()">Team</button>
         <button class="nav-burger" id="nav-burger" aria-label="Menü">
             <span></span><span></span><span></span>
@@ -1014,11 +1110,6 @@ function showModal() {
 }
 
 function initUserModal() {
-  const savedName  = localStorage.getItem('md_user');
-  const savedEmail = localStorage.getItem('md_email');
-  if (savedName && savedEmail) { setUser(savedName, savedEmail); return; }
-  showModal();
-
   const nameInput  = document.getElementById('name-input');
   const emailInput = document.getElementById('email-input');
   const btn        = document.getElementById('name-submit');
@@ -1034,15 +1125,24 @@ function initUserModal() {
   btn.addEventListener('click', submit);
   emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
   nameInput.addEventListener('keydown',  e => { if (e.key === 'Enter') emailInput.focus(); });
+
+  // Immer registrieren – unabhängig davon ob Modal gerade sichtbar ist
   document.getElementById('nav-change').addEventListener('click', () => {
     localStorage.removeItem('md_user');
     localStorage.removeItem('md_email');
     doneState = {};
     CATS.forEach(c => applyDoneUI(c.id, false));
+    document.getElementById('nav-user').classList.remove('visible');
+    document.getElementById('nav-admin').classList.remove('visible');
     nameInput.value  = '';
     emailInput.value = '';
     showModal();
   });
+
+  const savedName  = localStorage.getItem('md_user');
+  const savedEmail = localStorage.getItem('md_email');
+  if (savedName && savedEmail) { setUser(savedName, savedEmail); return; }
+  showModal();
 }
 
 /* ══════════════════════════
@@ -1083,6 +1183,159 @@ function initBurger() {
   document.addEventListener('click', e => {
     if (!drawer.contains(e.target) && e.target !== btn) {
       btn.classList.remove('open'); drawer.classList.remove('open');
+    }
+  });
+}
+
+/* ══════════════════════════
+   MAP
+══════════════════════════ */
+const MAP_PINS = [
+  // Cold Exposure
+  { name:'doctorfrost Frankfurt',   catId:'cold',   lat:50.1165, lng:8.6650, addr:'Stephanstraße 3, Frankfurt' },
+  { name:'doctorfrost Bad Homburg', catId:'cold',   lat:50.2262, lng:8.6184, addr:'Louisenstraße 64A, Bad Homburg' },
+  { name:'Cool Down Kältezentrum',  catId:'cold',   lat:49.9900, lng:9.0610, addr:'Hanauer Str. 6, Kleinostheim' },
+  // Breathwork / Meditation
+  { name:'Kadampa Meditationszentrum Frankfurt', catId:'breathwork', lat:50.1218, lng:8.7018, addr:'Arnsburger Str. 76, Frankfurt-Bornheim' },
+  { name:'Mindfulife Frankfurt',                 catId:'breathwork', lat:50.1090, lng:8.6740, addr:'Neue Mainzer Str. 66–68, Frankfurt' },
+  { name:'Ayurveda Deep Flow',                   catId:'breathwork', lat:50.1245, lng:8.7003, addr:'Heidestraße 146A, Frankfurt-Bornheim' },
+  // Mobility / Yoga / Pilates
+  { name:'corelab Frankfurt East',     catId:'mobility', lat:50.0990, lng:8.6875, addr:'Oskar-von-Miller-Str. 3, Sachsenhausen' },
+  { name:'Balance Reformer Frankfurt', catId:'mobility', lat:50.1256, lng:8.6898, addr:'Nordend, Frankfurt' },
+  { name:'INSIDE YOGA Frankfurt',      catId:'mobility', lat:50.1166, lng:8.6651, addr:'Stephanstraße 3, Frankfurt' },
+  { name:'Dschungel Yoga Frankfurt',   catId:'mobility', lat:50.1174, lng:8.6698, addr:'Schumannstraße 53, Frankfurt' },
+  { name:'Shanti Yoga Frankfurt',      catId:'mobility', lat:50.1120, lng:8.6890, addr:'Schillerstraße 30–40, Frankfurt' },
+  { name:'YogaSix Frankfurt Bornheim', catId:'mobility', lat:50.1257, lng:8.7134, addr:'Eichwaldstraße 68, Frankfurt-Bornheim' },
+  { name:'Amaya Soulyoga',             catId:'mobility', lat:50.1148, lng:8.7039, addr:'Waldschmidtstraße 2, Frankfurt' },
+  { name:'Urban Flow @ Mindspace',     catId:'mobility', lat:50.1090, lng:8.6740, addr:'Neue Mainzer Str. 66–68, Frankfurt' },
+  // Strength
+  { name:'Fitness First Konstablerwache',      catId:'strength', lat:50.1138, lng:8.6918, addr:'Konstablerwache, Frankfurt' },
+  { name:'PRIME TIME fitness Bornheim',        catId:'strength', lat:50.1289, lng:8.7058, addr:'Berger Straße 147, Frankfurt-Bornheim' },
+  { name:'PRIME TIME fitness Schweizer Platz', catId:'strength', lat:50.0998, lng:8.6745, addr:'Schwanthalerstraße 48A, Frankfurt' },
+  { name:'CrossFit 069',                       catId:'strength', lat:50.1146, lng:8.7196, addr:'Hanauer Landstraße 208–216, Frankfurt' },
+  { name:'PAX Functional Sports Club',         catId:'strength', lat:50.1195, lng:8.6378, addr:'Bockenheim, Frankfurt' },
+  { name:'Classy Fitness',                     catId:'strength', lat:50.1038, lng:8.6730, addr:'Wilhelm-Leuschner-Str. 38, Frankfurt' },
+  { name:'Fitness First Sachsenhausen',        catId:'strength', lat:50.0960, lng:8.6815, addr:'Sachsenhausen, Frankfurt' },
+  { name:'PRIME TIME fitness Bockenheim',      catId:'strength', lat:50.1200, lng:8.6375, addr:'Bockenheim, Frankfurt' },
+  { name:'Bodyweight Fitness FFM',             catId:'strength', lat:50.1186, lng:8.6605, addr:'Westend, Frankfurt' },
+  // Coordination
+  { name:'Boulderwelt Frankfurt',  catId:'coordination', lat:50.1589, lng:8.7063, addr:'August-Schanz-Str. 50, Frankfurt-Berkersheim' },
+  { name:'DYNOCHROM Boulderhalle', catId:'coordination', lat:50.1178, lng:8.7489, addr:'Flinschstraße 45, Frankfurt-Riederwald' },
+  { name:'Art of Boxing Frankfurt',catId:'coordination', lat:50.1587, lng:8.7061, addr:'August-Schanz-Str. 20, Frankfurt' },
+  { name:'L1FE Frankfurt',         catId:'coordination', lat:50.1118, lng:8.6803, addr:'Luginsland 1, Frankfurt' },
+  { name:'KletterBar Offenbach',   catId:'coordination', lat:50.0842, lng:8.7579, addr:'Sprendlinger Landstr. 177B, Offenbach' },
+  // Outdoor
+  { name:'Urban Heroes Frankfurt',              catId:'outdoor', lat:50.1042, lng:8.6714, addr:'Thurn-und-Taxis-Platz 6, Frankfurt' },
+  { name:'Laufcampus GmbH',                    catId:'outdoor', lat:50.1053, lng:8.6758, addr:'Frankfurt Mainufer' },
+  { name:'Original Bootcamp Günthersburgpark', catId:'outdoor', lat:50.1393, lng:8.7018, addr:'Wetteraustraße, Frankfurt' },
+  { name:'Original Bootcamp Grüneburgpark',    catId:'outdoor', lat:50.1233, lng:8.6601, addr:'Grüneburgpark, Frankfurt Westend' },
+  { name:'PRIME TIME Outdoor Training',        catId:'outdoor', lat:50.1289, lng:8.7060, addr:'Berger Straße 147, Frankfurt-Bornheim' },
+  // Recovery Day
+  { name:'Garden Eden Wellness',              catId:'recovery', lat:50.0102, lng:8.7878, addr:'Justus-von-Liebig-Str. 42, Dietzenbach' },
+  { name:'Fitness First (Sauna + Pool)',      catId:'recovery', lat:50.1140, lng:8.6920, addr:'Konstablerwache, Frankfurt' },
+  { name:'Meerraum Salzgrotte',               catId:'recovery', lat:50.1419, lng:8.5648, addr:'Eschborn-Süd' },
+  { name:'BARONG Holistic',                   catId:'recovery', lat:50.1158, lng:8.7090, addr:'Hochstraße 43, Frankfurt' },
+  { name:'Salzheilgrotte Frankfurt',          catId:'recovery', lat:50.1215, lng:8.6796, addr:'Eschenheimer Anlage 23a, Frankfurt' },
+  { name:'Massage Michal Nordend',            catId:'recovery', lat:50.1258, lng:8.6876, addr:'Egenolffstraße 19, Frankfurt' },
+  { name:'Essential Fitness Frankfurt',       catId:'recovery', lat:50.1062, lng:8.6616, addr:'Kaiserstraße 39, Frankfurt' },
+  { name:'NiRo Sportmassage',                 catId:'recovery', lat:50.0984, lng:8.5502, addr:'Silostraße 19, Frankfurt-Höchst' },
+  { name:'Hallenfreizeitbad Karben',          catId:'recovery', lat:50.2318, lng:8.7608, addr:'Am Schwimmbad 25, Karben' },
+  // Wildcard
+  { name:'Alma Dance Frankfurt',             catId:'wildcard', lat:50.1232, lng:8.7069, addr:'Alt-Bornheim 35, Frankfurt-Bornheim' },
+  { name:'Salsa Auténtica Frankfurt',        catId:'wildcard', lat:50.1140, lng:8.7145, addr:'Hanauer Landstraße 138, Frankfurt-Ostend' },
+  { name:'Tanzschule Frankfurt tanzt',       catId:'wildcard', lat:50.1194, lng:8.6654, addr:'Reuterweg 16, Frankfurt' },
+  { name:'BollyStep Frankfurt',              catId:'wildcard', lat:50.1148, lng:8.6487, addr:'Marburger Straße 28, Frankfurt-Bockenheim' },
+  { name:'Schwimmhalle Textorbad',           catId:'wildcard', lat:50.0982, lng:8.6897, addr:'Textorstraße 42, Frankfurt-Sachsenhausen' },
+  { name:'PRIME TIME Bornheim (Pool)',       catId:'wildcard', lat:50.1291, lng:8.7062, addr:'Berger Straße 147, Frankfurt-Bornheim' },
+  { name:'Fitness First (Pool)',             catId:'wildcard', lat:50.1138, lng:8.6922, addr:'Konstablerwache, Frankfurt' },
+  { name:'25hours Hotel The Trip',           catId:'wildcard', lat:50.1043, lng:8.6545, addr:'Niddastraße 56–58, Frankfurt' },
+  { name:'Qi Gong Frankfurt',               catId:'wildcard', lat:50.1109, lng:8.6821, addr:'Frankfurt' },
+];
+
+let mapInstance = null;
+let mapMarkers  = [];
+let activeFilter = 'all';
+
+function openMap() {
+  document.getElementById('map-overlay').classList.add('open');
+  if (!mapInstance) initMap();
+}
+function closeMap() {
+  document.getElementById('map-overlay').classList.remove('open');
+}
+
+function initMap() {
+  mapInstance = L.map('the-map', { zoomControl: true }).setView([50.1109, 8.6821], 12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO', maxZoom: 19
+  }).addTo(mapInstance);
+
+  // Filter-Buttons bauen
+  const filterWrap = document.getElementById('map-filters');
+  const allBtn = document.createElement('button');
+  allBtn.className = 'map-filter active';
+  allBtn.style.background = '#2ECC9A';
+  allBtn.style.color = '#0F0F1F';
+  allBtn.textContent = 'Alle';
+  allBtn.dataset.cat = 'all';
+  allBtn.onclick = () => filterMap('all');
+  filterWrap.appendChild(allBtn);
+
+  CATS.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'map-filter';
+    btn.dataset.cat = c.id;
+    btn.style.setProperty('--c', c.color);
+    btn.innerHTML = `<i data-lucide="${c.icon}" style="width:11px;height:11px;color:${c.color}"></i>${c.name}`;
+    btn.onclick = () => filterMap(c.id);
+    filterWrap.appendChild(btn);
+  });
+  lucide.createIcons({ nodes: [filterWrap] });
+
+  // Marker erstellen
+  MAP_PINS.forEach(pin => {
+    const cat = CATS.find(c => c.id === pin.catId);
+    if (!cat) return;
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="mp" style="--c:${cat.color}"><i data-lucide="${cat.icon}" style="width:14px;height:14px"></i></div>`,
+      iconSize: [34, 34], iconAnchor: [17, 17], popupAnchor: [0, -20]
+    });
+    const marker = L.marker([pin.lat, pin.lng], { icon })
+      .bindPopup(`
+        <div class="pop-cat" style="color:${cat.color}">${cat.name}</div>
+        <div class="pop-name">${pin.name}</div>
+        <div class="pop-addr">${pin.addr}</div>
+        <div class="pop-links">
+          <a class="pop-link" href="https://maps.google.com/?q=${encodeURIComponent(pin.addr)}" target="_blank">Google Maps</a>
+        </div>`)
+      .addTo(mapInstance);
+    marker._catId = pin.catId;
+    mapMarkers.push(marker);
+  });
+  // Lucide Icons in Markern rendern
+  setTimeout(() => lucide.createIcons({ nodes: Array.from(document.querySelectorAll('.mp')) }), 100);
+}
+
+function filterMap(catId) {
+  activeFilter = catId;
+  document.querySelectorAll('.map-filter').forEach(btn => {
+    const isActive = btn.dataset.cat === catId;
+    btn.classList.toggle('active', isActive);
+    if (isActive) {
+      const cat = CATS.find(c => c.id === catId);
+      btn.style.background = cat ? cat.color : '#2ECC9A';
+      btn.style.color = '#0F0F1F';
+    } else {
+      btn.style.background = '';
+      btn.style.color = '';
+    }
+  });
+  mapMarkers.forEach(m => {
+    if (catId === 'all' || m._catId === catId) {
+      m.addTo(mapInstance);
+    } else {
+      m.removeFrom(mapInstance);
     }
   });
 }
