@@ -441,6 +441,73 @@
         .hero-bottom { flex-direction: column; gap: 20px; }
         .modal-card { padding: 28px 24px 24px; }
     }
+
+    /* ════════════════════════════════════
+       ADMIN OVERLAY
+    ════════════════════════════════════ */
+    #admin-overlay {
+        position: fixed; inset: 0; z-index: 900;
+        background: var(--navy-deep);
+        overflow-y: auto; display: none;
+    }
+    #admin-overlay.open { display: block; }
+    .admin-wrap { max-width: var(--W); margin: 0 auto; padding: 40px; }
+    .admin-header {
+        display: flex; align-items: center;
+        justify-content: space-between;
+        margin-bottom: 40px; padding-bottom: 24px;
+        border-bottom: 1px solid var(--line);
+    }
+    .admin-title { font-family: var(--f-display); font-size: 52px; }
+    .admin-close {
+        background: none; border: 1px solid var(--line);
+        color: var(--muted); padding: 8px 18px;
+        border-radius: 6px; cursor: pointer;
+        font-family: var(--f-body); font-size: 13px;
+        transition: all 0.2s;
+    }
+    .admin-close:hover { border-color: var(--mint); color: var(--white); }
+    .admin-summary { display: flex; gap: 40px; margin-bottom: 36px; }
+    .admin-stat { display: flex; flex-direction: column; gap: 4px; }
+    .admin-stat-num {
+        font-family: var(--f-display); font-size: 44px;
+        color: var(--mint); line-height: 1;
+    }
+    .admin-stat-label {
+        font-size: 11px; color: var(--muted);
+        text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .admin-table-wrap { overflow-x: auto; }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .admin-table th {
+        padding: 10px 14px; text-align: left;
+        font-size: 10px; font-weight: 600;
+        letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--muted); border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+    }
+    .admin-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        color: var(--off);
+    }
+    .admin-table tr:hover td { background: var(--dim); }
+    .admin-table .check { color: var(--mint); font-weight: 700; text-align: center; }
+    .admin-table .cross { color: rgba(255,255,255,0.12); text-align: center; }
+    .admin-table .atotal { font-family: var(--f-display); font-size: 16px; color: var(--mint); }
+    .admin-table .atotal-0 { color: var(--muted); }
+    .admin-loading { text-align: center; padding: 60px; color: var(--muted); font-size: 14px; }
+    /* Admin-Button in Nav */
+    #nav-admin {
+        display: none; background: none;
+        border: 1px solid var(--line); color: var(--muted);
+        padding: 4px 12px; border-radius: 4px;
+        cursor: pointer; font-size: 11px; font-weight: 600;
+        letter-spacing: 0.06em; text-transform: uppercase;
+        transition: all 0.2s; flex-shrink: 0;
+    }
+    #nav-admin.visible { display: block; }
+    #nav-admin:hover { border-color: var(--mint); color: var(--mint); }
     </style>
 </head>
 <body>
@@ -457,6 +524,24 @@
     </div>
 </div>
 
+<!-- ── ADMIN OVERLAY ── -->
+<div id="admin-overlay">
+    <div class="admin-wrap">
+        <div class="admin-header">
+            <span class="admin-title">Unser Fortschritt</span>
+            <button class="admin-close" onclick="closeAdmin()">✕ Schließen</button>
+        </div>
+        <div class="admin-summary" id="admin-summary"></div>
+        <div class="admin-table-wrap">
+            <div class="admin-loading" id="admin-loading">Lade Daten…</div>
+            <table class="admin-table" id="admin-table" style="display:none">
+                <thead id="admin-thead"></thead>
+                <tbody id="admin-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <!-- ── NAV ── -->
 <nav id="nav">
     <div class="nav-wrap">
@@ -467,6 +552,7 @@
             <span class="nav-progress" id="nav-progress">0/8</span>
             <button class="nav-change" id="nav-change" title="Name ändern">· wechseln</button>
         </div>
+        <button id="nav-admin" onclick="openAdmin()">Team</button>
         <button class="nav-burger" id="nav-burger" aria-label="Menü">
             <span></span><span></span><span></span>
         </button>
@@ -906,6 +992,8 @@ function buildCats() {
 /* ══════════════════════════
    USER / MODAL
 ══════════════════════════ */
+const ADMIN_EMAILS = ['j.meysel@rto.de', 'r.meyer@rto.de']; // Diese E-Mails sehen den Admin-Bereich
+
 function setUser(name, email) {
   userId = toUserId(name, email);
   localStorage.setItem('md_user', name);
@@ -913,6 +1001,10 @@ function setUser(name, email) {
   document.getElementById('nav-user-name').textContent = name;
   document.getElementById('nav-user').classList.add('visible');
   document.getElementById('name-modal').classList.add('hidden');
+  // Name in Firebase speichern, damit Admin ihn lesen kann
+  if (db && userId) db.ref(`users/${userId}/name`).set(name);
+  // Team-Übersicht für alle sichtbar
+  document.getElementById('nav-admin').classList.add('visible');
   loadUserProgress();
 }
 
@@ -992,6 +1084,82 @@ function initBurger() {
     if (!drawer.contains(e.target) && e.target !== btn) {
       btn.classList.remove('open'); drawer.classList.remove('open');
     }
+  });
+}
+
+/* ══════════════════════════
+   ADMIN
+══════════════════════════ */
+function openAdmin() {
+  document.getElementById('admin-overlay').classList.add('open');
+  loadAdmin();
+}
+
+function closeAdmin() {
+  document.getElementById('admin-overlay').classList.remove('open');
+}
+
+function loadAdmin() {
+  if (!db) { document.getElementById('admin-loading').textContent = 'Firebase nicht verbunden.'; return; }
+  const loading = document.getElementById('admin-loading');
+  const table   = document.getElementById('admin-table');
+  loading.style.display = 'block';
+  table.style.display   = 'none';
+
+  db.ref('users').once('value', snap => {
+    const data  = snap.val() || {};
+    const users = Object.entries(data).map(([id, val]) => ({
+      name: val.name || id,
+      cats: val.categories || {}
+    }));
+
+    // Zusammenfassung
+    const total    = users.length;
+    const complete = users.filter(u => CATS.every(c => u.cats[c.id])).length;
+    const avgDone  = total ? (users.reduce((s,u) => s + CATS.filter(c => u.cats[c.id]).length, 0) / total).toFixed(1) : 0;
+    document.getElementById('admin-summary').innerHTML = `
+      <div class="admin-stat">
+        <span class="admin-stat-num">${total}</span>
+        <span class="admin-stat-label">Teilnehmer</span>
+      </div>
+      <div class="admin-stat">
+        <span class="admin-stat-num">${complete}</span>
+        <span class="admin-stat-label">Alle 8 erledigt</span>
+      </div>
+      <div class="admin-stat">
+        <span class="admin-stat-num">${avgDone}</span>
+        <span class="admin-stat-label">Ø Kategorien</span>
+      </div>`;
+
+    // Tabellen-Header
+    document.getElementById('admin-thead').innerHTML = `<tr>
+      <th>Name</th>
+      ${CATS.map(c => `<th title="${c.name}" style="text-align:center">
+        <i data-lucide="${c.icon}" style="width:13px;height:13px;color:${c.color};display:block;margin:0 auto 3px"></i>
+        <span>${c.num}</span>
+      </th>`).join('')}
+      <th>Gesamt</th>
+    </tr>`;
+
+    // Zeilen – sortiert nach Fortschritt absteigend
+    users.sort((a,b) =>
+      CATS.filter(c => b.cats[c.id]).length - CATS.filter(c => a.cats[c.id]).length
+    );
+    document.getElementById('admin-tbody').innerHTML = users.map(u => {
+      const done  = CATS.filter(c => u.cats[c.id]).length;
+      const cells = CATS.map(c => u.cats[c.id]
+        ? `<td class="check">✓</td>`
+        : `<td class="cross">–</td>`
+      ).join('');
+      return `<tr>
+        <td>${u.name}</td>${cells}
+        <td class="atotal${done === 0 ? ' atotal-0' : ''}">${done}/8</td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="${CATS.length + 2}" style="color:var(--muted);padding:32px">Noch keine Einträge.</td></tr>`;
+
+    loading.style.display = 'none';
+    table.style.display   = 'table';
+    lucide.createIcons({ nodes: [document.getElementById('admin-thead')] });
   });
 }
 
