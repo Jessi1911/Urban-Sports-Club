@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Move &amp; Discover – Urban Sports Club MAX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    :root {
+        --navy:      #1A1A2E;
+        --navy-deep: #0F0F1F;
+        --navy-mid:  #14142A;
+        --mint:      #2ECC9A;
+        --mint-glow: rgba(46,204,154,0.15);
+        --white:     #FFFFFF;
+        --off:       #D4D8E0;
+        --muted:     #7A8494;
+        --dim:       rgba(255,255,255,0.06);
+        --line:      rgba(255,255,255,0.08);
+        --cat:       #2ECC9A;
+        --W:         1320px;
+        --f-display: 'Bebas Neue', sans-serif;
+        --f-body:    'Inter', system-ui, sans-serif;
+    }
+
+    body {
+        font-family: var(--f-body);
+        background: var(--navy);
+        color: var(--white);
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: var(--navy-deep); }
+    ::-webkit-scrollbar-thumb { background: var(--mint); }
+
+    /* ════════════════════════════════════
+       NAME MODAL
+    ════════════════════════════════════ */
+    #name-modal {
+        position: fixed; inset: 0; z-index: 1000;
+        background: rgba(10,10,22,0.92);
+        backdrop-filter: blur(20px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 24px;
+    }
+    #name-modal.hidden { display: none; }
+    .modal-card {
+        background: #16213E;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 40px 40px 36px;
+        max-width: 400px; width: 100%;
+    }
+    .modal-card h2 {
+        font-family: var(--f-display);
+        font-size: 36px; line-height: 1;
+        margin-bottom: 8px;
+    }
+    .modal-card p {
+        font-size: 13px; color: var(--muted);
+        line-height: 1.6; margin-bottom: 28px;
+    }
+    .modal-card p strong { color: var(--off); font-weight: 600; }
+    .modal-input {
+        width: 100%; padding: 12px 16px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--line); border-radius: 6px;
+        color: var(--white); font-family: var(--f-body);
+        font-size: 15px; outline: none;
+        transition: border-color 0.2s; margin-bottom: 12px;
+    }
+    .modal-input:focus { border-color: var(--mint); }
+    .modal-input::placeholder { color: var(--muted); }
+    .modal-btn {
+        width: 100%; padding: 12px;
+        background: var(--mint); color: var(--navy-deep);
+        font-family: var(--f-body); font-size: 13px;
+        font-weight: 700; letter-spacing: 0.08em;
+        text-transform: uppercase; border: none;
+        border-radius: 6px; cursor: pointer;
+        transition: background 0.2s;
+    }
+    .modal-btn:hover { background: #25b585; }
+    .modal-hint {
+        margin-top: 16px; font-size: 11px;
+        color: var(--muted); text-align: center; line-height: 1.5;
+    }
+
+    /* ════════════════════════════════════
+       NAV
+    ════════════════════════════════════ */
+    #nav {
+        position: sticky; top: 0; z-index: 300;
+        height: 52px;
+        background: rgba(15,15,31,0.94);
+        backdrop-filter: blur(24px);
+        border-bottom: 1px solid var(--line);
+    }
+    .nav-wrap {
+        max-width: var(--W); margin: 0 auto;
+        padding: 0 40px; height: 100%;
+        display: flex; align-items: center;
+        justify-content: space-between; gap: 16px;
+    }
+    .nav-brand {
+        font-family: var(--f-display);
+        font-size: 20px; color: var(--mint);
+        letter-spacing: 0.06em; flex-shrink: 0;
+    }
+    .nav-nums {
+        display: flex; align-items: stretch; height: 100%;
+    }
+    .nav-num {
+        display: flex; align-items: center;
+        padding: 0 10px; color: var(--muted);
+        border-bottom: 2px solid transparent;
+        transition: color 0.2s, border-color 0.2s; position: relative;
+    }
+    .nav-num:hover { color: var(--off); }
+    .nav-num.active { color: var(--mint); border-bottom-color: var(--mint); }
+    /* green dot when done */
+    .nav-num.done::after {
+        content: ''; position: absolute;
+        top: 8px; right: 4px;
+        width: 5px; height: 5px; border-radius: 50%;
+        background: var(--mint);
+    }
+
+    /* User chip */
+    .nav-user {
+        display: none; align-items: center; gap: 10px;
+        flex-shrink: 0;
+    }
+    .nav-user.visible { display: flex; }
+    .nav-user-name {
+        font-size: 13px; font-weight: 600; color: var(--off);
+    }
+    .nav-progress {
+        font-family: var(--f-display); font-size: 15px;
+        color: var(--mint); letter-spacing: 0.04em;
+    }
+    .nav-change {
+        font-size: 11px; color: var(--muted); cursor: pointer;
+        background: none; border: none; padding: 0;
+        transition: color 0.2s;
+    }
+    .nav-change:hover { color: var(--white); }
+
+    /* hamburger */
+    .nav-burger {
+        display: none; background: none; border: none;
+        cursor: pointer; flex-direction: column;
+        gap: 5px; padding: 6px;
+    }
+    .nav-burger span {
+        display: block; width: 20px; height: 1.5px;
+        background: var(--off); transition: all 0.22s;
+    }
+    .nav-burger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .nav-burger.open span:nth-child(2) { opacity: 0; }
+    .nav-burger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+    .nav-drawer {
+        position: absolute; top: 100%; left: 0; right: 0;
+        background: rgba(10,10,22,0.98); backdrop-filter: blur(24px);
+        border-bottom: 1px solid var(--line);
+        padding: 12px 20px 18px;
+        display: none; flex-direction: column;
+    }
+    .nav-drawer.open { display: flex; }
+    .nav-drawer a {
+        display: flex; align-items: center; gap: 14px;
+        padding: 11px 12px; color: var(--muted);
+        font-size: 13px; font-weight: 500;
+        border-left: 2px solid transparent;
+        transition: all 0.18s;
+    }
+    .nav-drawer a:hover { color: var(--white); border-left-color: var(--cat); background: var(--dim); padding-left: 18px; }
+    .nav-drawer .dn { font-family: var(--f-display); font-size: 17px; }
+
+    /* ════════════════════════════════════
+       HERO
+    ════════════════════════════════════ */
+    #hero {
+        min-height: 100svh;
+        position: relative;
+        display: flex; flex-direction: column;
+        justify-content: flex-end;
+        overflow: hidden;
+    }
+    .hero-bg {
+        position: absolute; inset: 0;
+        background-image: url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=1600&auto=format&fit=crop&q=70');
+        background-size: cover; background-position: center 25%;
+        transform: scale(1.05);
+        transition: transform 8s ease;
+    }
+    #hero:hover .hero-bg { transform: scale(1); }
+    .hero-bg::after {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(
+            to bottom,
+            rgba(15,15,31,0.5) 0%,
+            rgba(15,15,31,0.2) 40%,
+            rgba(15,15,31,0.7) 70%,
+            var(--navy-deep) 100%
+        );
+    }
+    .hero-content {
+        position: relative; z-index: 2;
+        max-width: var(--W); width: 100%;
+        margin: 0 auto; padding: 0 40px 56px;
+    }
+    .hero-kicker {
+        font-size: 11px; font-weight: 600;
+        letter-spacing: 0.18em; text-transform: uppercase;
+        color: var(--mint); margin-bottom: 20px;
+        display: flex; align-items: center; gap: 14px;
+    }
+    .hero-kicker::before {
+        content: ''; display: block;
+        width: 28px; height: 1px; background: var(--mint);
+    }
+    .hero-title {
+        font-family: var(--f-display);
+        font-size: clamp(88px, 14vw, 192px);
+        line-height: 0.88; letter-spacing: 0.01em; margin-bottom: 36px;
+    }
+    .hero-title .stroke {
+        display: block; color: transparent;
+        -webkit-text-stroke: 1.5px rgba(255,255,255,0.35);
+    }
+    .hero-bottom {
+        display: flex; align-items: flex-end;
+        justify-content: space-between; gap: 32px; flex-wrap: wrap;
+    }
+    .hero-desc {
+        max-width: 460px; font-size: 15px;
+        color: rgba(255,255,255,0.6); line-height: 1.75;
+    }
+    .hero-desc strong { color: var(--white); font-weight: 500; }
+
+    /* ════════════════════════════════════
+       CATEGORY SCROLL STRIP
+    ════════════════════════════════════ */
+    #strip {
+        background: var(--navy-deep);
+        border-bottom: 1px solid var(--line);
+        overflow-x: auto; -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    #strip::-webkit-scrollbar { display: none; }
+    .strip-inner { display: flex; min-width: max-content; }
+    .strip-item {
+        display: flex; align-items: center; gap: 10px;
+        padding: 15px 22px;
+        border-right: 1px solid var(--line);
+        color: var(--muted); font-size: 12px;
+        font-weight: 600; letter-spacing: 0.06em;
+        text-transform: uppercase; white-space: nowrap;
+        transition: all 0.18s; cursor: pointer; position: relative;
+    }
+    .strip-item:first-child { border-left: 1px solid var(--line); }
+    .strip-item .snum {
+        font-family: var(--f-display); font-size: 20px;
+        color: var(--line); line-height: 1; transition: color 0.18s;
+    }
+    .strip-item:hover { color: var(--white); background: var(--dim); }
+    .strip-item:hover .snum { color: var(--cat); }
+    /* done state */
+    .strip-item.done { color: var(--mint); }
+    .strip-item.done .snum { color: var(--mint); }
+    .strip-item.done::after {
+        content: '✓';
+        font-size: 10px; font-weight: 700;
+        color: var(--mint); margin-left: -4px;
+    }
+
+    /* ════════════════════════════════════
+       INTRO BLOCK
+    ════════════════════════════════════ */
+    #intro {
+        max-width: var(--W); margin: 0 auto;
+        padding: 88px 40px;
+        display: grid; grid-template-columns: 200px 1fr; gap: 80px;
+        align-items: start; border-bottom: 1px solid var(--line);
+    }
+    .intro-ghost {
+        font-family: var(--f-display); font-size: 96px; line-height: 0.85;
+        color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.06);
+    }
+    .intro-body h2 {
+        font-size: 28px; font-weight: 700;
+        letter-spacing: -0.025em; line-height: 1.25; margin-bottom: 18px;
+    }
+    .intro-body p { font-size: 15px; color: var(--muted); line-height: 1.8; max-width: 580px; }
+
+    /* ════════════════════════════════════
+       CATEGORY SECTIONS
+    ════════════════════════════════════ */
+    .cat-sec { border-bottom: 1px solid var(--line); }
+
+    .cat-photo { position: relative; height: 360px; overflow: hidden; }
+    .cat-photo img {
+        width: 100%; height: 100%;
+        object-fit: cover; object-position: center 35%;
+        display: block;
+        filter: brightness(0.5) saturate(0.75);
+        transition: transform 7s ease, filter 0.5s;
+    }
+    .cat-sec:hover .cat-photo img { transform: scale(1.04); filter: brightness(0.55) saturate(0.85); }
+
+    /* done: subtle green tint on photo */
+    .cat-sec.done .cat-photo img { filter: brightness(0.45) saturate(0.6); }
+    .cat-sec.done .cat-photo::after {
+        content: ''; position: absolute; inset: 0;
+        background: rgba(46,204,154,0.08); pointer-events: none; z-index: 1;
+    }
+
+    .cat-photo-inner {
+        position: absolute; inset: 0; z-index: 2;
+        background: linear-gradient(
+            to bottom,
+            transparent 20%,
+            rgba(15,15,31,0.5) 60%,
+            var(--navy-deep) 100%
+        );
+        display: flex; align-items: flex-end;
+        padding: 36px 40px;
+    }
+    .cat-head { display: flex; align-items: flex-end; gap: 22px; }
+    .cat-n {
+        font-family: var(--f-display); font-size: 108px; line-height: 0.82;
+        color: var(--cat); letter-spacing: -0.02em;
+    }
+    .cat-title-block h2 {
+        font-family: var(--f-display);
+        font-size: clamp(40px, 5.5vw, 72px);
+        line-height: 0.95; letter-spacing: 0.02em; margin-bottom: 7px;
+    }
+    .cat-sub {
+        font-size: 11px; font-weight: 600;
+        letter-spacing: 0.12em; text-transform: uppercase;
+        color: rgba(255,255,255,0.45);
+    }
+
+    /* Erledigt-Button */
+    .done-btn {
+        position: absolute; top: 20px; right: 20px; z-index: 10;
+        display: flex; align-items: center; gap: 7px;
+        padding: 8px 16px;
+        font-family: var(--f-body); font-size: 11px; font-weight: 700;
+        letter-spacing: 0.09em; text-transform: uppercase;
+        color: rgba(255,255,255,0.65);
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 4px; cursor: pointer;
+        transition: all 0.2s; backdrop-filter: blur(8px);
+    }
+    .done-btn:hover { color: var(--white); background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); }
+    .done-btn.done {
+        color: var(--navy-deep);
+        background: var(--mint); border-color: var(--mint);
+    }
+    .done-btn.done:hover { background: #25b585; border-color: #25b585; }
+
+    /* Provider list */
+    .cat-list { max-width: var(--W); margin: 0 auto; padding: 0 40px 56px; }
+    .prov {
+        display: grid;
+        grid-template-columns: 1fr 260px auto;
+        gap: 6px 24px; padding: 18px 0;
+        border-bottom: 1px solid var(--line);
+        align-items: start; transition: background 0.18s;
+        position: relative;
+    }
+    .prov:last-child { border-bottom: none; }
+    .prov::before {
+        content: ''; position: absolute; left: -40px; top: 0; bottom: 0;
+        width: 2px; background: var(--cat);
+        transform: scaleY(0); transform-origin: top;
+        transition: transform 0.22s ease;
+    }
+    .prov:hover { background: rgba(255,255,255,0.025); }
+    .prov:hover::before { transform: scaleY(1); }
+    .prov:hover .pn { color: var(--cat); }
+    .pn { font-size: 15px; font-weight: 600; line-height: 1.3; transition: color 0.18s; grid-column: 1; grid-row: 1; }
+    .pd { font-size: 12.5px; color: var(--muted); line-height: 1.55; grid-column: 1; grid-row: 2; max-width: 520px; }
+    .pa { font-size: 12px; color: var(--muted); line-height: 1.5; grid-column: 2; grid-row: 1 / 3; padding-top: 1px; }
+    .pa a { transition: color 0.18s; }
+    .pa a:hover { color: var(--mint); }
+    .pl {
+        grid-column: 3; grid-row: 1 / 3;
+        display: flex; align-items: center; justify-content: flex-end; gap: 5px;
+        font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+        text-transform: uppercase; white-space: nowrap; color: var(--mint);
+        border: 1px solid rgba(46,204,154,0.3); border-radius: 4px;
+        padding: 5px 10px; transition: background 0.18s, color 0.18s;
+        align-self: start; margin-top: 1px;
+    }
+    .pl:hover { background: var(--mint); color: var(--navy-deep); }
+
+    /* ════════════════════════════════════
+       NOTES
+    ════════════════════════════════════ */
+    #notes { background: var(--navy-deep); border-top: 1px solid var(--line); padding: 72px 40px; }
+    .notes-wrap { max-width: var(--W); margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+    .note { padding-top: 24px; border-top: 2px solid var(--line); }
+    .note:first-child { border-top-color: var(--mint); }
+    .note-ico { color: var(--mint); margin-bottom: 16px; }
+    .note h3 { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+    .note p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+    .note strong { color: var(--off); font-weight: 600; }
+
+    /* ════════════════════════════════════
+       FOOTER
+    ════════════════════════════════════ */
+    footer {
+        border-top: 1px solid var(--line); padding: 22px 40px;
+        max-width: var(--W); margin: 0 auto;
+        display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    }
+    .ft-brand { font-family: var(--f-display); font-size: 16px; color: var(--mint); }
+    .ft-copy { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
+
+    /* ════════════════════════════════════
+       ANIMATIONS
+    ════════════════════════════════════ */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+    .reveal:nth-child(2) { transition-delay: 0.1s; }
+    .reveal:nth-child(3) { transition-delay: 0.18s; }
+
+    /* ════════════════════════════════════
+       RESPONSIVE
+    ════════════════════════════════════ */
+    @media (max-width: 1100px) {
+        .nav-nums { display: none; }
+        .nav-burger { display: flex; }
+        .prov { grid-template-columns: 1fr auto; }
+        .pa { grid-column: 1; grid-row: 3; }
+        .pl { grid-column: 2; grid-row: 1 / 4; align-self: center; }
+    }
+    @media (max-width: 800px) {
+        #intro { grid-template-columns: 1fr; gap: 28px; padding: 64px 24px; }
+        .intro-ghost { font-size: 64px; }
+        .hero-content { padding: 0 24px 44px; }
+        .cat-photo { height: 280px; }
+        .cat-photo-inner { padding: 24px; }
+        .cat-n { font-size: 72px; }
+        .cat-title-block h2 { font-size: 36px; }
+        .done-btn { top: 12px; right: 12px; padding: 7px 12px; font-size: 10px; }
+        .cat-list { padding: 0 24px 48px; }
+        .prov { grid-template-columns: 1fr auto; }
+        .prov::before { left: -24px; }
+        #notes { padding: 56px 24px; }
+        .notes-wrap { grid-template-columns: 1fr; }
+        footer { padding: 20px 24px; }
+        .nav-wrap { padding: 0 24px; }
+        .nav-user-name { display: none; }
+    }
+    @media (max-width: 520px) {
+        .hero-title { font-size: clamp(72px, 22vw, 96px); }
+        .hero-bottom { flex-direction: column; gap: 20px; }
+        .modal-card { padding: 28px 24px 24px; }
+    }
+    </style>
+</head>
+<body>
+
+<!-- ── NAME MODAL ── -->
+<div id="name-modal">
+    <div class="modal-card">
+        <h2>Wer bist du?</h2>
+        <p>Dein Fortschritt wird gespeichert und ist auf <strong>allen deinen Geräten</strong> abrufbar. Verwende immer dieselbe E-Mail-Adresse.</p>
+        <input type="text" class="modal-input" id="name-input" placeholder="Vor- und Nachname" maxlength="60" autocomplete="name">
+        <input type="email" class="modal-input" id="email-input" placeholder="E-Mail-Adresse" maxlength="80" autocomplete="email">
+        <button class="modal-btn" id="name-submit">Starten →</button>
+        <p class="modal-hint">Name + E-Mail ergeben zusammen deine eindeutige ID.</p>
+    </div>
+</div>
+
+<!-- ── NAV ── -->
+<nav id="nav">
+    <div class="nav-wrap">
+        <a href="#hero" class="nav-brand">Robert's Team</a>
+        <nav class="nav-nums" id="nav-nums"></nav>
+        <div class="nav-user" id="nav-user">
+            <span class="nav-user-name" id="nav-user-name"></span>
+            <span class="nav-progress" id="nav-progress">0/8</span>
+            <button class="nav-change" id="nav-change" title="Name ändern">· wechseln</button>
+        </div>
+        <button class="nav-burger" id="nav-burger" aria-label="Menü">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+    <div class="nav-drawer" id="nav-drawer"></div>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+        <p class="hero-kicker">RTO GmbH Frankfurt &nbsp;·&nbsp; Internes Programm &nbsp;·&nbsp; 2026</p>
+        <h1 class="hero-title">
+            <span>MOVE &amp;</span>
+            <span class="stroke">DISCOVER</span>
+        </h1>
+        <div class="hero-bottom">
+            <p class="hero-desc">
+                <strong>8 Experiences. 2 Monate.</strong> Entdecke mit deiner USC MAX-Mitgliedschaft
+                acht verschiedene Bewegungswelten – von Kryotherapie bis Salsa.
+                Keine Rangliste, kein Wettbewerb.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ── STRIP ── -->
+<div id="strip"><div class="strip-inner" id="strip-inner"></div></div>
+
+<!-- ── INTRO ── -->
+<section id="intro">
+    <div class="intro-ghost reveal">WHY<br>8</div>
+    <div class="intro-body reveal">
+        <h2>Acht Kategorien.<br>Ein vollständiges Bild von Bewegung.</h2>
+        <p>Jede der 8 Kategorien adressiert einen anderen Aspekt körperlicher und mentaler Gesundheit – von Kraft und Mobilität über Regeneration bis zu völlig neuen Erfahrungen. Zusammen zeigen sie, wie vielseitig deine USC MAX-Mitgliedschaft wirklich ist.</p>
+    </div>
+</section>
+
+<!-- ── CATEGORIES ── -->
+<div id="cat-container"></div>
+
+<!-- ── NOTES ── -->
+<section id="notes">
+    <div class="notes-wrap">
+        <div class="note reveal">
+            <div class="note-ico"><i data-lucide="circle-plus" style="width:20px;height:20px"></i></div>
+            <h3>Plus-Check-in Standorte</h3>
+            <p>Kryotherapie, Sauna und einige Wellness-Anbieter sind Plus-Standorte. Mit <strong>MAX</strong> sind maximal <strong>8 Besuche pro Monat</strong> inklusive.</p>
+        </div>
+        <div class="note reveal">
+            <div class="note-ico"><i data-lucide="smartphone" style="width:20px;height:20px"></i></div>
+            <h3>Buchung über die USC App</h3>
+            <p>Alle Buchungen laufen über die <strong>Urban Sports Club App</strong>. Kursplätze rechtzeitig reservieren – beliebte Studios füllen sich schnell.</p>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <span class="ft-brand">Move &amp; Discover</span>
+    <span class="ft-copy">2026 &nbsp;·&nbsp; RTO GmbH Frankfurt &nbsp;·&nbsp; Intern</span>
+</footer>
+
+<script>
+/* ══════════════════════════════════════════
+   ⚠️  FIREBASE KONFIGURATION
+   Ersetze die Werte unten mit deinen eigenen
+   Firebase-Projektdaten:
+   → https://console.firebase.google.com/
+   → Projekt erstellen → Web-App hinzufügen
+   → Konfiguration kopieren
+   WICHTIG: Realtime Database aktivieren
+   (Testmodus reicht für den Start)
+══════════════════════════════════════════ */
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyDfCCZR9kD-W80Q9iWLMCRnxCSWTcx_byg",
+  authDomain:        "urban-sports-club-542c4.firebaseapp.com",
+  databaseURL:       "https://urban-sports-club-542c4-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "urban-sports-club-542c4",
+  storageBucket:     "urban-sports-club-542c4.firebasestorage.app",
+  messagingSenderId: "1027264500960",
+  appId:             "1:1027264500960:web:02d7eaf1f71da114de6c85",
+  measurementId: "G-9B3S8ZE7M0"
+};
+
+/* ══════════════════════════
+   DATA
+══════════════════════════ */
+const CATS = [
+  {
+    id:'cold', num:'01', name:'Cold Exposure',
+    icon:'snowflake', color:'#93C5FD',
+    sub:'Kälte · HRV · Entzündung',
+    img:'https://images.unsplash.com/photo-1532798442725-41036acc7489?w=1400&auto=format&fit=crop&q=75',
+    providers:[
+      { name:'doctorfrost Frankfurt',  addr:'Stephanstraße 3, Frankfurt Innenstadt',
+        desc:'Professionelle Kryotherapie und Ganzkörper-Eisbad-Sessions in der Frankfurter Innenstadt.',
+        url:'https://urbansportsclub.com/de/venues/doctorfrost' },
+      { name:'doctorfrost Bad Homburg', addr:'Louisenstraße 64A, 61348 Bad Homburg',
+        desc:'Kältetherapie und Ganzkörper-Kryosauna im Herzen von Bad Homburg.',
+        url:'https://urbansportsclub.com/de/venues/doctorfrost-bad-homburg' },
+      { name:'Cool Down Kältezentrum', addr:'Hanauer Str. 6, 63801 Kleinostheim',
+        desc:'Kältezentrum mit Beauty- und Wellness-Angeboten, spezialisiert auf Ganzkörperkryotherapie.',
+        url:'https://urbansportsclub.com/de/venues/cool-down-kaltezentrum-beautylounge' }
+    ]
+  },
+  {
+    id:'breathwork', num:'02', name:'Breathwork / Meditation',
+    icon:'wind', color:'#6EE7B7',
+    sub:'Atem · HRV · Stress',
+    img:'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1400&auto=format&fit=crop&q=75',
+    providers:[
+      { name:'Kadampa Meditationszentrum Frankfurt', addr:'Arnsburger Str. 76, Frankfurt-Bornheim',
+        desc:'Geführte Meditationen in buddhistischer Tradition – offen für alle Erfahrungsstufen.',
+        url:'https://urbansportsclub.com/de/sports/meditation/frankfurt' },
+      { name:'Mindfulife Frankfurt', addr:'Neue Mainzer Landstraße 66–68, Frankfurt Innenstadt',
+        desc:'Achtsamkeitstraining, Breathwork und Stressreduktion im Herzen Frankfurts.',
+        url:'https://urbansportsclub.com/de/venues/mindfulife' },
+      { name:'Ayurveda Deep Flow', addr:'Heidestraße 146A, 60385 Frankfurt-Bornheim',
+        desc:'Ayurvedische Atemübungen, Entspannungsrituale und ganzheitliche Tiefenentspannung.',
+        url:'https://urbansportsclub.com/de/venues/ayurveda-deep-flow' }
+    ]
+  },
+  {
+    id:'mobility', num:'03', name:'Mobility / Yoga / Pilates',
+    icon:'move', color:'#2ECC9A',
+    sub:'Gelenke · Faszien · Tiefenmuskulatur',
+    img:'https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?w=1400&auto=format&fit=crop&q=75',
+    providers:[
+      { name:'corelab Frankfurt East',     addr:'Oskar-von-Miller-Str. 3, Frankfurt-Sachsenhausen',
+        desc:'Reformer-Pilates und Functional Movement Training im Boutique-Studio-Format.',
+        url:'https://urbansportsclub.com/de/venues/corelab-frankfurt-east' },
+      { name:'Balance Reformer Frankfurt', addr:'Nordend, Frankfurt',
+        desc:'Klassisches Reformer-Pilates für Tiefenmuskulatur, Haltung und Körperspannung.',
+        url:'https://urbansportsclub.com/de/venues/balance-reformer-frankfurt-nordend' },
+      { name:'INSIDE YOGA Frankfurt',      addr:'Stephanstraße 3, Frankfurt Innenstadt',
+        desc:'Vielfältiges Yoga-Angebot in verschiedenen Stilen und Schwierigkeitsstufen.',
+        url:'https://urbansportsclub.com/de/venues/inside-yoga-studio-frankfurt' },
+      { name:'Dschungel Yoga Frankfurt',   addr:'Schumannstraße 53, Frankfurt Innenstadt',
+        desc:'Urban Yoga mit tropischem Flair – Vinyasa, Yin und Restorative Yoga.',
+        url:'https://urbansportsclub.com/de/venues/dschungel-yoga' },
+      { name:'Shanti Yoga Frankfurt',      addr:'Schillerstraße 30–40, Frankfurt Innenstadt',
+        desc:'Klassisches Hatha und Vinyasa Yoga in ruhiger, zentral gelegener Atmosphäre.',
+        url:'https://urbansportsclub.com' },
+      { name:'YogaSix Frankfurt Bornheim', addr:'Eichwaldstraße 68, Frankfurt-Bornheim',
+        desc:'Power-, Yin- und Restore-Yoga im modernen Boutique-Studio. Max. 4× pro Monat über USC.',
+        url:'https://urbansportsclub.com/de/venues/yogasix-studio-frankfurt-bornheim' },
+      { name:'Amaya Soulyoga',             addr:'Waldschmidtstraße 2, Frankfurt Innenstadt',
+        desc:'Spirituelles Yoga, Somatic Movement und Tiefenentspannung für Körper und Geist.',
+        url:'https://urbansportsclub.com' },
+      { name:'Urban Flow @ Mindspace',     addr:'Neue Mainzer Straße 66–68, Frankfurt Innenstadt',
+        desc:'Dynamische Flow-Klassen in elegantem Co-Working-Umfeld in der Frankfurter City.',
+        url:'https://urbansportsclub.com' }
+    ]
+  },
+  {
+    id:'strength', num:'04', name:'Strength',
+    icon:'dumbbell', color:'#FCA5A5',
+    sub:'Muskelerhalt · Metabolismus · Knochen',
+    img:'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1400&auto=format&fit=crop&q=75',
+    providers:[
+      { name:'Fitness First Frankfurt Konstablerwache', addr:'Konstablerwache, Frankfurt',
+        desc:'Großes, vollausgestattetes Fitnessstudio mit Geräte- und Freihantelparcours.',
+        url:'https://urbansportsclub.com/de/venues/fitness-first-frankfurt-konstablerwache' },
+      { name:'PRIME TIME fitness Bornheim',            addr:'Berger Straße 147, Frankfurt-Bornheim',
+        desc:'Boutique-Gym mit moderner Ausstattung und Personal-Training-Atmosphäre.',
+        url:'https://urbansportsclub.com' },
+      { name:'PRIME TIME fitness Schweizer Platz',     addr:'Schwanthalerstraße 48A, Frankfurt-Sachsenhausen',
+        desc:'Premium-Fitnessstudio in Sachsenhausen – exklusiv für MAX-Mitglieder buchbar.',
+        url:'https://urbansportsclub.com' },
+      { name:'CrossFit 069',                           addr:'Hanauer Landstraße 208–216, Frankfurt-Bornheim',
+        desc:'Funktionelles Hochintensitätstraining in einer motivierten Community. Zuzahlung erforderlich.',
+        url:'https://urbansportsclub.com/de/venues/crossfit-069' },
+      { name:'PAX Functional Sports Club',             addr:'Bockenheim, Frankfurt',
+        desc:'Functional Training mit Fokus auf natürliche Bewegungsmuster und Gruppentraining.',
+        url:'https://urbansportsclub.com/de/venues/pax-functional-sports-club' },
+      { name:'Classy Fitness',                         addr:'Wilhelm-Leuschner-Straße 38, Frankfurt',
+        desc:'Klassisches Fitnesstraining mit guter Grundausstattung in freundlicher Atmosphäre.',
+        url:'https://urbansportsclub.com' },
+      { name:'Fitness First Frankfurt Sachsenhausen',  addr:'Sachsenhausen, Frankfurt',
+        desc:'Vollausgestattetes Fitnessstudio mit Cardio, Geräten und Freifläche.',
+        url:'https://urbansportsclub.com' },
+      { name:'PRIME TIME fitness Bockenheim',          addr:'Bockenheim, Frankfurt',
+        desc:'Modernes Fitnessstudio in Bockenheim mit guter Erreichbarkeit.',
+        url:'https://urbansportsclub.com' },
+      { name:'Bodyweight Fitness FFM',                 addr:'Westend, Frankfurt',
+        desc:'Körpergewichtstraining ohne Geräte – für Kraft, Kontrolle und Beweglichkeit.',
+        url:'https://urbansportsclub.com/de/venues/bodyweight-fitness-ffm' }
+    ]
+  },
+  {
+    id:'coordination', num:'05', name:'Coordination',
+    icon:'target', color:'#C4B5FD',
+    sub:'Neuroplastizität · Reaktion · Kognition',
+    img:'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=1400&auto=format&fit=crop&q=75',
+    providers:[
+      { name:'Boulderwelt Frankfurt',  addr:'August-Schanz-Straße 50, Frankfurt-Berkersheim',
+        desc:'Frankfurts größte Boulderhalle mit Routen für alle Levels und regelmäßigen Kursen.',
+        url:'https://urbansportsclub.com/de/venues/boulderwelt-frankfurt' },
+      { name:'DYNOCHROM Boulderhalle', addr:'Flinschstraße 45, Frankfurt-Riederwald',
+        desc:'Farbenfrohe Boulderhalle im Frankfurter Osten mit vielfältigen Routen und Grip-Varianten.',
+        url:'https://urbansportsclub.com/de/venues/dynochrom-boulderhalle-frankfurt' },
+      { name:'Art of Boxing Frankfurt',addr:'August-Schanz-Straße 20, Frankfurt-Nordend',
+        desc:'Boxtraining für Technik, Reaktionsvermögen, Koordination und Kondition.',
+        url:'https://urbansportsclub.com' },
+      { name:'L1FE Frankfurt',         addr:'Luginsland 1, Frankfurt Innenstadt',
+        desc:'Multifunktionales Sportstudio im Zentrum Frankfurts mit vielfältigem Kursangebot.',
+        url:'https://urbansportsclub.com' },
+      { name:'KletterBar Offenbach',   addr:'Sprendlinger Landstraße 177B, 63069 Offenbach',
+        desc:'Klettern und Bouldern in Offenbach – ideal für Koordinations- und Körperspannungstraining.',
+        url:'https://urbansportsclub.com/de/venues/kletterbar' }
+    ]
+  },
+  {
+    id:'outdoor', num:'06', name:'Outdoor',
+    icon:'tree-pine', color:'#86EFAC',
+    sub:'Zone-2 · Ausdauer · Natur',
+    img:'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1400&auto=format&fit=crop&q=75',
+    providers:[
+      { name:'Urban Heroes Frankfurt',              addr:'Thurn-und-Taxis-Platz 6, Frankfurt',
+        desc:'Outdoor-Fitness, Parkour-Training und funktionelle Bewegung im urbanen Umfeld.',
+        url:'https://urbansportsclub.com/de/venues/urban-heroes-frankfurt' },
+      { name:'Laufcampus GmbH',                    addr:'Frankfurt Mainufer',
+        desc:'Geführte Laufgruppen am Mainufer – strukturiertes Zone-2-Training mit Coach.',
+        url:'https://urbansportsclub.com' },
+      { name:'Original Bootcamp Günthersburgpark', addr:'Wetteraustraße, Frankfurt',
+        desc:'Outdoor-Bootcamp im Günthersburgpark – Kraft, Ausdauer und Teamspirit unter freiem Himmel.',
+        url:'https://urbansportsclub.com/de/venues/original-bootcamp-frankfurt-gunthersburgpark' },
+      { name:'Original Bootcamp Grüneburgpark',    addr:'Grüneburgpark, Frankfurt Westend',
+        desc:'Outdoor-Gruppentraining im Grüneburgpark – Intervalle, Beweglichkeit und Kraft im Park.',
+        url:'https://urbansportsclub.com/de/venues/original-bootcamp-frankfurt-gruneburgpark' },
+      { name:'PRIME TIME Outdoor Training',        addr:'Berger Straße 147, Frankfurt-Bornheim',
+        desc:'Outdoor-Fitness-Sessions mit qualifizierten Trainern – Ausdauer und Funktionalität.',
+        url:'https://urbansportsclub.com' }
+    ]
+  },
+  {
+    id:'recovery', num:'07', name:'Recovery Day',
+    icon:'moon', color:'#7DD3FC',
+    sub:'Schlaf · Parasympathikus · Herzgesundheit',
+    img:'https://images.unsplash.com/photo-1544161513-0179fe746fd5?w=1400&auto=format&fit=crop&q=75',
+    providers:[
+      { name:'Garden Eden Wellness',                    addr:'Justus-von-Liebig-Straße 42, 63128 Dietzenbach',
+        desc:'Sauna-Wellness und umfassende Erholung – ideal für einen vollständigen Recovery-Tag.',
+        url:'https://urbansportsclub.com/de/sports/sauna/frankfurt' },
+      { name:'Fitness First Konstablerwache (Sauna + Pool)', addr:'Konstablerwache, Frankfurt',
+        desc:'Sauna und Schwimmbad als Regenerationseinheit direkt im Fitnessstudio.',
+        url:'https://urbansportsclub.com/de/venues/fitness-first-frankfurt-konstablerwache' },
+      { name:'Meerraum Salzgrotte',                     addr:'Eschborn-Süd, Frankfurt',
+        desc:'Salztherapie und Halotherapie zur Entspannung der Atemwege und Tiefenregeneration.',
+        url:'https://urbansportsclub.com/de/venues/eschborn' },
+      { name:'BARONG Holistic',                         addr:'Hochstraße 43, Frankfurt',
+        desc:'Ganzheitliche Behandlungen, balinesische Massagen und holistische Körperarbeit.',
+        url:'https://urbansportsclub.com' },
+      { name:'Salzheilgrotte Frankfurt',                addr:'Eschenheimer Anlage 23a, Frankfurt',
+        desc:'Halotherapie in natürlichem Salzambiente – Stressabbau und Regeneration.',
+        url:'https://urbansportsclub.com' },
+      { name:'Massage Michal Nordend',                  addr:'Egenolffstraße 19, Frankfurt',
+        desc:'Professionelle Sportmassagen und Tiefengewebsmassagen im Nordend.',
+        url:'https://urbansportsclub.com' },
+      { name:'Essential Fitness Frankfurt',             addr:'Kaiserstraße 39, Frankfurt Westend',
+        desc:'Wellness und Sauna-Nutzung im Westend – Erholung nach intensiven Trainingseinheiten.',
+        url:'https://urbansportsclub.com' },
+      { name:'NiRo Sportmassage',                      addr:'Silostraße 19, Frankfurt-Höchst',
+        desc:'Sportmassagen und Regenerationstherapie in Frankfurt-Höchst.',
+        url:'https://urbansportsclub.com' },
+      { name:'Hallenfreizeitbad Karben',                addr:'Am Schwimmbad 25, 61184 Karben',
+        desc:'Schwimmen, Wassermassage und Entspannung im Freizeitbad Karben.',
+        url:'https://urbansportsclub.com' }
+    ]
+  },
+  {
+    id:'wildcard', num:'08', name:'Wildcard',
+    icon:'sparkles', color:'#FCD34D',
+    sub:'Neue Erfahrungen · Soziales · Freude',
+    img:'https://images.unsplash.com/photo-1547153760-18fc86324498?w=1400&auto=format&fit=crop&q=75',
+    providers:[
+      { name:'Alma Dance Frankfurt',             addr:'Alt-Bornheim 35, Frankfurt-Bornheim',
+        desc:'Tanzkurse in lateinamerikanischen Stilen in entspannter Atmosphäre.',
+        url:'https://urbansportsclub.com/de/venues/bornheim-dance-studio' },
+      { name:'Salsa Auténtica Frankfurt',        addr:'Hanauer Landstraße 138, Frankfurt-Ostend',
+        desc:'Authentisches Salsa-Training für Anfänger und Fortgeschrittene im Ostend.',
+        url:'https://urbansportsclub.com' },
+      { name:'Tanzschule Frankfurt tanzt',       addr:'Reuterweg 16, Frankfurt Innenstadt',
+        desc:'Breitgefächertes Tanzkursangebot für alle Levels und Tanzstile.',
+        url:'https://urbansportsclub.com/de/venues/tanzschule-frankfurt-tanzt' },
+      { name:'BollyStep Frankfurt',              addr:'Marburger Straße 28, Frankfurt-Bockenheim',
+        desc:'Bollywood-Tanztraining – energiegeladen, bunt und mit viel Freude.',
+        url:'https://urbansportsclub.com' },
+      { name:'Schwimmhalle Textorbad',           addr:'Textorstraße 42, Frankfurt-Sachsenhausen',
+        desc:'Schwimmen im historischen Hallenbad – Technik verbessern oder Bahnen ziehen.',
+        url:'https://urbansportsclub.com' },
+      { name:'PRIME TIME Bornheim (Pool)',       addr:'Berger Straße 147, Frankfurt-Bornheim',
+        desc:'Pool-Nutzung im PRIME TIME Bornheim – Schwimmen als aktive Abwechslung.',
+        url:'https://urbansportsclub.com' },
+      { name:'Fitness First Konstablerwache (Pool)', addr:'Konstablerwache, Frankfurt',
+        desc:'Schwimmbad-Nutzung im Fitness First – Bahnen ziehen oder Aqua-Fitness.',
+        url:'https://urbansportsclub.com/de/venues/fitness-first-frankfurt-konstablerwache' },
+      { name:'25hours Hotel The Trip',           addr:'Niddastraße 56–58, Frankfurt Bahnhofsviertel',
+        desc:'Pool und Wellnessbereich im trendigen Design-Hotel im Bahnhofsviertel.',
+        url:'https://urbansportsclub.com' },
+      { name:'Qi Gong Frankfurt',                addr:'Frankfurt',
+        desc:'Sanfte Körper- und Energiearbeit durch traditionelle Qi-Gong-Übungen.',
+        url:'https://urbansportsclub.com' }
+    ]
+  }
+];
+
+/* ══════════════════════════
+   HELPERS
+══════════════════════════ */
+const gmap = a => 'https://maps.google.com/?q=' + encodeURIComponent(a);
+
+function toUserId(name, email) {
+  const slug = s => s.toLowerCase().trim()
+    .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+    .replace(/\s+/g,'-').replace(/[^a-z0-9@._-]/g,'');
+  return (slug(name) + '--' + slug(email)) || 'user';
+}
+
+/* ══════════════════════════
+   FIREBASE STATE
+══════════════════════════ */
+let db = null;
+let userId = null;
+let doneState = {};
+
+function initFirebase() {
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.database();
+  } catch(e) {
+    console.warn('Firebase nicht konfiguriert – Offline-Modus aktiv.', e);
+  }
+}
+
+function loadUserProgress() {
+  if (!db || !userId) return;
+  db.ref(`users/${userId}/categories`).on('value', snap => {
+    doneState = snap.val() || {};
+    CATS.forEach(c => applyDoneUI(c.id, !!doneState[c.id]));
+    updateProgressDisplay();
+  });
+}
+
+function toggleDone(catId) {
+  const next = !doneState[catId];
+  doneState[catId] = next;
+  applyDoneUI(catId, next);
+  updateProgressDisplay();
+  if (db && userId) {
+    db.ref(`users/${userId}/categories/${catId}`).set(next || null);
+  }
+}
+
+function applyDoneUI(catId, done) {
+  const sec = document.getElementById(catId);
+  const btn = document.getElementById('done-' + catId);
+  const strip = document.querySelector(`.strip-item[data-cat="${catId}"]`);
+  const navNum = document.querySelector(`.nav-num[data-id="${catId}"]`);
+  if (sec)    sec.classList.toggle('done', done);
+  if (btn)  { btn.classList.toggle('done', done); btn.innerHTML = done
+    ? `<i data-lucide="check" style="width:13px;height:13px"></i> Erledigt`
+    : `<i data-lucide="circle" style="width:13px;height:13px"></i> Als erledigt markieren`;
+    lucide.createIcons({ nodes: [btn] });
+  }
+  if (strip)  strip.classList.toggle('done', done);
+  if (navNum) navNum.classList.toggle('done', done);
+}
+
+function updateProgressDisplay() {
+  const count = CATS.filter(c => doneState[c.id]).length;
+  const el = document.getElementById('nav-progress');
+  if (el) el.textContent = `${count}/8`;
+}
+
+/* ══════════════════════════
+   BUILD DOM
+══════════════════════════ */
+function buildNav() {
+  const nums = document.getElementById('nav-nums');
+  const drawer = document.getElementById('nav-drawer');
+  CATS.forEach(c => {
+    const a = document.createElement('a');
+    a.className = 'nav-num'; a.href = '#' + c.id; a.dataset.id = c.id;
+    a.title = c.name;
+    a.innerHTML = `<i data-lucide="${c.icon}" style="width:17px;height:17px"></i>`;
+    nums.appendChild(a);
+
+    const d = document.createElement('a');
+    d.href = '#' + c.id;
+    d.innerHTML = `<span class="dn" style="color:${c.color}">${c.num}</span><i data-lucide="${c.icon}" style="width:14px;height:14px;color:${c.color}"></i>${c.name}`;
+    d.addEventListener('click', () => {
+      drawer.classList.remove('open');
+      document.getElementById('nav-burger').classList.remove('open');
+    });
+    drawer.appendChild(d);
+  });
+}
+
+function buildStrip() {
+  const si = document.getElementById('strip-inner');
+  CATS.forEach(c => {
+    const a = document.createElement('a');
+    a.className = 'strip-item'; a.href = '#' + c.id;
+    a.dataset.cat = c.id;
+    a.style.setProperty('--cat', c.color);
+    a.innerHTML = `<span class="snum">${c.num}</span><i data-lucide="${c.icon}" style="width:13px;height:13px;color:${c.color}"></i>${c.name}`;
+    si.appendChild(a);
+  });
+}
+
+function buildCats() {
+  const cont = document.getElementById('cat-container');
+  CATS.forEach(c => {
+    const sec = document.createElement('section');
+    sec.className = 'cat-sec'; sec.id = c.id;
+    sec.style.setProperty('--cat', c.color);
+
+    const rows = c.providers.map(p => `
+      <div class="prov">
+        <div class="pn">${p.name}</div>
+        <div class="pd">${p.desc}</div>
+        <div class="pa"><a href="${gmap(p.addr)}" target="_blank" rel="noopener">${p.addr}</a></div>
+        <a href="${p.url}" target="_blank" rel="noopener" class="pl">
+          USC <i data-lucide="arrow-up-right" style="width:12px;height:12px"></i>
+        </a>
+      </div>`).join('');
+
+    sec.innerHTML = `
+      <div class="cat-photo">
+        <img src="${c.img}" alt="${c.name}" loading="lazy">
+        <div class="cat-photo-inner">
+          <div class="cat-head">
+            <div class="cat-n">${c.num}</div>
+            <div class="cat-title-block">
+              <h2>${c.name}</h2>
+              <div class="cat-sub">${c.sub}</div>
+            </div>
+          </div>
+        </div>
+        <button class="done-btn" id="done-${c.id}" onclick="toggleDone('${c.id}')">
+          <i data-lucide="circle" style="width:13px;height:13px"></i> Als erledigt markieren
+        </button>
+      </div>
+      <div class="cat-list reveal">${rows}</div>`;
+    cont.appendChild(sec);
+  });
+}
+
+/* ══════════════════════════
+   USER / MODAL
+══════════════════════════ */
+function setUser(name, email) {
+  userId = toUserId(name, email);
+  localStorage.setItem('md_user', name);
+  localStorage.setItem('md_email', email);
+  document.getElementById('nav-user-name').textContent = name;
+  document.getElementById('nav-user').classList.add('visible');
+  document.getElementById('name-modal').classList.add('hidden');
+  loadUserProgress();
+}
+
+function showModal() {
+  document.getElementById('name-modal').classList.remove('hidden');
+  document.getElementById('name-input').focus();
+}
+
+function initUserModal() {
+  const savedName  = localStorage.getItem('md_user');
+  const savedEmail = localStorage.getItem('md_email');
+  if (savedName && savedEmail) { setUser(savedName, savedEmail); return; }
+  showModal();
+
+  const nameInput  = document.getElementById('name-input');
+  const emailInput = document.getElementById('email-input');
+  const btn        = document.getElementById('name-submit');
+
+  const submit = () => {
+    const name  = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    if (name.length < 2) { nameInput.focus(); return; }
+    if (!email.includes('@')) { emailInput.focus(); return; }
+    setUser(name, email);
+  };
+
+  btn.addEventListener('click', submit);
+  emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+  nameInput.addEventListener('keydown',  e => { if (e.key === 'Enter') emailInput.focus(); });
+  document.getElementById('nav-change').addEventListener('click', () => {
+    localStorage.removeItem('md_user');
+    localStorage.removeItem('md_email');
+    doneState = {};
+    CATS.forEach(c => applyDoneUI(c.id, false));
+    nameInput.value  = '';
+    emailInput.value = '';
+    showModal();
+  });
+}
+
+/* ══════════════════════════
+   SCROLL SPY
+══════════════════════════ */
+function initSpy() {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      document.querySelectorAll('.nav-num').forEach(n => n.classList.remove('active'));
+      const n = document.querySelector(`.nav-num[data-id="${e.target.id}"]`);
+      if (n) n.classList.add('active');
+    });
+  }, { rootMargin: '-15% 0px -75% 0px' });
+  CATS.forEach(c => { const el = document.getElementById(c.id); if(el) obs.observe(el); });
+}
+
+/* ══════════════════════════
+   REVEAL
+══════════════════════════ */
+function initReveal() {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); } });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
+
+/* ══════════════════════════
+   BURGER
+══════════════════════════ */
+function initBurger() {
+  const btn = document.getElementById('nav-burger');
+  const drawer = document.getElementById('nav-drawer');
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    btn.classList.toggle('open'); drawer.classList.toggle('open');
+  });
+  document.addEventListener('click', e => {
+    if (!drawer.contains(e.target) && e.target !== btn) {
+      btn.classList.remove('open'); drawer.classList.remove('open');
+    }
+  });
+}
+
+/* ══════════════════════════
+   INIT
+══════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  initFirebase();
+  buildNav(); buildStrip(); buildCats();
+  lucide.createIcons();
+  initSpy(); initReveal(); initBurger();
+  initUserModal();
+});
+</script>
+</body>
+</html>
