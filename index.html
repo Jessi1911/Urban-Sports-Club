@@ -885,7 +885,16 @@ const CATS = [
         url:'https://urbansportsclub.com/de/venues/prime-time-fitness-frankfurt-bockenheim?date=2026-05-26&service_type=1' },
       { name:'Bodyweight Fitness FFM',                 addr:'Schillerstraße 30-40, 60313 Frankfurt',
         desc:'Körpergewichtstraining ohne Geräte – für Kraft, Kontrolle und Beweglichkeit.',
-        url:'https://urbansportsclub.com/de/venues/bodyweight-fitness-ffm' }
+        url:'https://urbansportsclub.com/de/venues/bodyweight-fitness-ffm' },
+      { name:'High-Class Fitness',                 addr:'Alte Sattelfabrik 1, 61350 Frankfurt',
+        desc:'Fitness in Bad Homburg vor der Höhe.',
+        url:'https://urbansportsclub.com/de/venues/high-class-fitness?date=2026-05-29&service_type=1' },
+      { name:'CrossFit Airfield',                 addr:'Am Fliegerhorst 1, 63762 Frankfurt',
+        desc:'crossfit, functional, fitness in Großostheim',
+        url:'https://urbansportsclub.com/de/venues/crossfit-airfield' },
+      { name:'Mrs.Sporty Club Hattersheim',                 addr:'Untertorstraße 17, 65795 Frankfurt',
+        desc:'Bei Mrs.Sporty trainierst du in einem Studio exklusiv für Frauen – mit individueller Betreuung im Einzeltraining und motivierenden Fitnesskursen.',
+        url:'https://urbansportsclub.com/de/venues/mrssporty-club-hattersheim' }
     ]
   },
   {
@@ -943,7 +952,10 @@ const CATS = [
         url:'https://urbansportsclub.com/de/venues/original-bootcamp-frankfurt-gruneburgpark' },
       { name:'PRIME TIME Outdoor Training',        addr:'Berger Straße 147, Frankfurt-Bornheim',
         desc:'Outdoor-Fitness-Sessions mit qualifizierten Trainern – Ausdauer und Funktionalität.',
-        url:'https://urbansportsclub.com/de/venues/outdoor-prime-time-fitness-bornheim-1?date=2026-05-26&service_type=1' }
+        url:'https://urbansportsclub.com/de/venues/outdoor-prime-time-fitness-bornheim-1?date=2026-05-26&service_type=1' },
+      { name:'Wiesenworkout Rebstockpark',        addr:'Rebstockpark, 60486 Frankfurt',
+        desc:'Wir veranstalten ein funktionelles Zirkeltraining an der frischen Luft im Rebstockpark.',
+        url:'https://urbansportsclub.com/de/venues/wiesenworkout-rebstockpark?date=2026-05-30' }
     ]
   },
   {
@@ -1306,7 +1318,6 @@ const MAP_PINS = [
   { name:'INSIDE YOGA Frankfurt',              catId:'mobility', lat:50.1166, lng:8.6651, addr:'Stephanstraße 3, Frankfurt' },
   { name:'Dschungel Yoga Frankfurt',           catId:'mobility', lat:50.1174, lng:8.6698, addr:'Schumannstraße 53, Frankfurt' },
   { name:'Shanti Yoga Frankfurt',              catId:'mobility', lat:50.1120, lng:8.6890, addr:'Schillerstraße 30–40, Frankfurt' },
-  { name:'YogaSix Frankfurt Bornheim',         catId:'mobility', lat:50.1257, lng:8.7134, addr:'Eichwaldstraße 68, Frankfurt-Bornheim' },
   { name:'Amaya Soulyoga',                     catId:'mobility', lat:50.1148, lng:8.7039, addr:'Waldschmidtstraße 2, Frankfurt' },
   { name:'Nest Studio',                        catId:'mobility', lat:50.0928, lng:8.6893, addr:'Darmstädter Landstraße 186, Frankfurt' },
   { name:'Recover Society Roomers',            catId:'mobility', lat:50.1035, lng:8.6490, addr:'Gutleutstraße 85, Frankfurt' },
@@ -1314,7 +1325,6 @@ const MAP_PINS = [
   { name:'Yoga by Stephan Suh (Börse)',        catId:'mobility', lat:50.1133, lng:8.6793, addr:'Meisengasse 9, Frankfurt' },
   { name:'Yoga by Stephan Suh (Willy-Brandt)',catId:'mobility', lat:50.1098, lng:8.6812, addr:'Friedensstraße 5, Frankfurt' },
   { name:'Fight&Flow Studio Frankfurt',        catId:'mobility', lat:50.0923, lng:8.6880, addr:'Mörfelder Landstraße 52-54, Frankfurt' },
-  { name:'Urban Flow @ Mindspace',             catId:'mobility', lat:50.1090, lng:8.6740, addr:'Neue Mainzer Str. 66–68, Frankfurt' },
   // Strength
   { name:'Fitness First Frankfurt Konstablerwache', catId:'strength', lat:50.1138, lng:8.6918, addr:'Zeil 72-82, Frankfurt' },
   { name:'PRIME TIME fitness Bornheim',             catId:'strength', lat:50.1289, lng:8.7058, addr:'Berger Straße 147, Frankfurt-Bornheim' },
@@ -1325,6 +1335,9 @@ const MAP_PINS = [
   { name:'Fitness First Frankfurt Sachsenhausen',   catId:'strength', lat:50.0958, lng:8.6834, addr:'Hedderichstraße 51, Frankfurt' },
   { name:'PRIME TIME fitness Bockenheim',           catId:'strength', lat:50.1213, lng:8.6433, addr:'Clemensstraße 10, Frankfurt' },
   { name:'Bodyweight Fitness FFM',                  catId:'strength', lat:50.1120, lng:8.6890, addr:'Schillerstraße 30-40, Frankfurt' },
+  { name:'High-Class Fitness',                      catId:'strength', lat:50.2195, lng:8.5985, addr:'Alte Sattelfabrik 1, Bad Homburg' },
+  { name:'CrossFit Airfield',                       catId:'strength', lat:49.9490, lng:9.0756, addr:'Am Fliegerhorst 1, Großostheim' },
+  { name:'Mrs.Sporty Club Hattersheim',             catId:'strength', lat:50.0668, lng:8.4740, addr:'Untertorstraße 17, Hattersheim' },
   // Coordination
   { name:'Boulderwelt Frankfurt',       catId:'coordination', lat:50.1589, lng:8.7063, addr:'August-Schanz-Str. 50, Frankfurt-Berkersheim' },
   { name:'DYNOCHROM Boulderhalle',      catId:'coordination', lat:50.1178, lng:8.7489, addr:'Flinschstraße 45, Frankfurt-Riederwald' },
@@ -1342,6 +1355,7 @@ const MAP_PINS = [
   { name:'Original Bootcamp Günthersburgpark',  catId:'outdoor', lat:50.1393, lng:8.7018, addr:'Wetteraustraße, Frankfurt' },
   { name:'Original Bootcamp Grüneburgpark',     catId:'outdoor', lat:50.1233, lng:8.6601, addr:'Grüneburgpark, Frankfurt Westend' },
   { name:'PRIME TIME Outdoor Training',         catId:'outdoor', lat:50.1289, lng:8.7060, addr:'Berger Straße 147, Frankfurt-Bornheim' },
+  { name:'Wiesenworkout Rebstockpark',          catId:'outdoor', lat:50.1156, lng:8.6174, addr:'Rebstockpark, Frankfurt' },
   // Recovery Day
   { name:'Garden Eden Wellness',         catId:'recovery', lat:50.0102, lng:8.7878, addr:'Justus-von-Liebig-Str. 42, Dietzenbach' },
   { name:'Fitness First (Sauna + Pool)', catId:'recovery', lat:50.1140, lng:8.6920, addr:'Zeil 72-82, Frankfurt' },
