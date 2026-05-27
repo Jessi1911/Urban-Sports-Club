@@ -862,7 +862,12 @@ const CATS = [
       { group:'Yoga',
         name:'Yoga by Stephan Suh',        addr:'Friedensstraße 5, 60311 Frankfurt',
         desc:'Dynamische Yoga Stunden mitten im Zentrum von Frankfurt, direkt am Willy-Brandt-Platz (U-Bahn)!',
-        url:'https://urbansportsclub.com/de/venues/yoga-by-stephan-suh-friedensstrae' }
+        url:'https://urbansportsclub.com/de/venues/yoga-by-stephan-suh-friedensstrae' },
+        { group:'Yoga',
+        name:'Yoga by Stephan Suh',        addr:'Zimmerweg 6, 60325 Frankfurt',
+        desc:'Mat Pilates und Reformer Pilates Stunden mitten im Zentrum von Frankfurt, im Westend!',
+        note:'Reformer Kurse: 10 € Zuuzahlung',
+        url:'https://urbansportsclub.com/de/venues/yoga-by-stephan-suh-studio-zimmerweg?date=2026-05-31' }
     ]
   },
   {
@@ -989,27 +994,37 @@ const CATS = [
     sub:'Zone-2 · Ausdauer · Natur',
     img:'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1400&auto=format&fit=crop&q=75',
     providers:[
-      { name:'Laufcampus Lauftreff Lyoner Quartier Frankfurt', addr:'Lyoner Straße 38, 60528 Frankfurt',
+      { group:'Laufen',
+        name:'Laufcampus Lauftreff Lyoner Quartier Frankfurt', addr:'Lyoner Straße 38, 60528 Frankfurt',
         desc:'Erleben Sie mit uns 60 Minuten pure Bewegungsfreude!',
         url:'https://urbansportsclub.com/de/venues/laufcampus-lauftreff-lyoner-quartier-frankfurt?date=2026-05-27&service_type=1' },
-      { name:'Original Bootcamp Günthersburgpark', addr:'Wetteraustraße, Frankfurt',
+      { group:'Fitness',
+        name:'Original Bootcamp Günthersburgpark', addr:'Wetteraustraße, Frankfurt',
         desc:'Outdoor-Bootcamp im Günthersburgpark – Kraft, Ausdauer und Teamspirit unter freiem Himmel.',
         url:'https://urbansportsclub.com/de/venues/original-bootcamp-frankfurt-gunthersburgpark' },
-      { name:'Original Bootcamp Grüneburgpark',    addr:'Grüneburgpark, Frankfurt Westend',
+      { group:'Fitness',
+        name:'Original Bootcamp Grüneburgpark',    addr:'Grüneburgpark, Frankfurt Westend',
         desc:'Outdoor-Gruppentraining im Grüneburgpark – Intervalle, Beweglichkeit und Kraft im Park.',
         url:'https://urbansportsclub.com/de/venues/original-bootcamp-frankfurt-gruneburgpark' },
-      { name:'PRIME TIME Outdoor Training',        addr:'Berger Straße 147, Frankfurt-Bornheim',
+      { group:'Fitness',
+        name:'PRIME TIME Outdoor Training',        addr:'Berger Straße 147, Frankfurt-Bornheim',
         desc:'Outdoor-Fitness-Sessions mit qualifizierten Trainern – Ausdauer und Funktionalität.',
         url:'https://urbansportsclub.com/de/venues/outdoor-prime-time-fitness-bornheim-1?date=2026-05-26&service_type=1' },
       { name:'Wiesenworkout Rebstockpark',          addr:'Rebstockpark, 60486 Frankfurt',
         desc:'Wir veranstalten ein funktionelles Zirkeltraining an der frischen Luft im Rebstockpark.',
         url:'https://urbansportsclub.com/de/venues/wiesenworkout-rebstockpark?date=2026-05-30' },
-      { name:'PitschWalk - Powerwalking Frankfurt', addr:'Untermainanlage 11 (Park neben „Opernpforte" des Theaters), 60311 Frankfurt',
+      { group:'Laufen',
+        name:'PitschWalk - Powerwalking Frankfurt', addr:'Untermainanlage 11 (Park neben „Opernpforte" des Theaters), 60311 Frankfurt',
         desc:'Du möchtest raus, Dich bewegen, Fitness, Wellness und Spaß in der Gruppe? Dann bist Du beim Powerwalking genau richtig!',
         url:'https://urbansportsclub.com/de/venues/pitschwalk-frankfurt-am-main?date=2026-06-01&service_type=1' },
-      { name:'Running City Tours Frankfurt',        addr:'Untermainkai, 60329 Frankfurt',
+      { group:'Laufen',
+        name:'Running City Tours Frankfurt',        addr:'Untermainkai, 60329 Frankfurt',
         desc:'Du möchtest raus, Dich bewegen, Fitness, Wellness und Spaß in der Gruppe? Dann bist Du hier genau richtig!',
-        url:'https://urbansportsclub.com/de/venues/running-city-tours-frankfurt?date=2026-05-27&service_type=1' }
+        url:'https://urbansportsclub.com/de/venues/running-city-tours-frankfurt?date=2026-05-27&service_type=1' },
+      { group:'Fitness',
+        name:'OCR Frankfurt -Trainingsgelände',        addr:'Am Römerhof 9, 60486 Frankfurt',
+        desc:'Bootcamp und Parkour in Frankfurt.',
+        url:'https://urbansportsclub.com/de/venues/ocr-frankfurt-trainingsgelnde-in-sportanlage-rebstock?date=2026-05-27&service_type=1' }
     ]
   },
   {
@@ -1489,6 +1504,10 @@ const MAP_PINS = [
   { name:'Riedbad Bergen-Enkheim',       catId:'wildcard', lat:50.1489, lng:8.7589, addr:'Fritz-Schubert-Ring 2, Frankfurt' },
   { name:'Freibad Silo',                 catId:'wildcard', lat:50.0887, lng:8.5468, addr:'Hunsrückstraße 100, Frankfurt-Höchst' },
   { name:'Freibad Stadion',              catId:'wildcard', lat:50.0698, lng:8.6712, addr:'Mörfelder Landstraße 362, Frankfurt' },
+  // Mobility – Yoga by Stephan Suh Zimmerweg
+  { name:'Yoga by Stephan Suh (Zimmerweg)', catId:'mobility', lat:50.1182, lng:8.6643, addr:'Zimmerweg 6, Frankfurt' },
+  // Outdoor – OCR Frankfurt Trainingsgelände
+  { name:'OCR Frankfurt Trainingsgelände',  catId:'outdoor',  lat:50.1163, lng:8.6198, addr:'Am Römerhof 9, Frankfurt' },
 ];
 
 let mapInstance = null;
