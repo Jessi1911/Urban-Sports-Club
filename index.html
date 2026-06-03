@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/lucide@1.17.0/dist/umd/lucide.min.js"></script>
     <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -26,7 +26,7 @@
         --mint-glow: rgba(46,204,154,0.15);
         --white:     #FFFFFF;
         --off:       #D4D8E0;
-        --muted:     #7A8494;
+        --muted:     #8C97A8;
         --dim:       rgba(255,255,255,0.06);
         --line:      rgba(255,255,255,0.08);
         --cat:       #2ECC9A;
@@ -286,7 +286,11 @@
     /* ════════════════════════════════════
        CATEGORY SECTIONS
     ════════════════════════════════════ */
-    .cat-sec { border-bottom: 1px solid var(--line); }
+    .cat-sec {
+        border-bottom: 1px solid var(--line);
+        scroll-margin-top: 52px;   /* Höhe der fixierten Nav – verhindert, dass beim Sprung übers Menü
+                                       Nummer, Titel und "Erledigt"-Button hinter der Leiste verschwinden */
+    }
 
     .cat-photo { position: relative; height: 360px; overflow: hidden; }
     .cat-photo img {
@@ -476,25 +480,6 @@
     @media (max-width: 900px) {
         #nav-map, #nav-admin { display: none !important; }
     }
-    @media (max-width: 768px) {
-        .map-topbar {
-            height: auto; flex-wrap: wrap;
-            padding: 10px 16px 0;
-            gap: 8px;
-        }
-        .map-title { font-size: 18px; }
-        .map-filters {
-            order: 3; width: 100%;
-            flex-wrap: nowrap; overflow-x: auto;
-            padding-bottom: 10px;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
-        }
-        .map-filters::-webkit-scrollbar { display: none; }
-        .map-filter { flex-shrink: 0; }
-        .map-close { margin-left: auto; }
-    }
-
     .leaflet-container svg { display: initial; }
     [data-lucide], [data-lucide] svg { display: inline-block !important; }
 
@@ -572,6 +557,28 @@
         text-transform: uppercase; transition: all 0.2s; flex-shrink: 0;
     }
     #nav-map:hover { border-color: var(--mint); color: var(--mint); }
+
+    /* Karten-Topbar mobil — MUSS nach den Basisregeln stehen, sonst gewinnt
+       (bei gleicher Spezifität) die spätere Basisregel und überschreibt diese hier */
+    @media (max-width: 768px) {
+        .map-topbar {
+            height: auto; flex-wrap: wrap;
+            padding: 10px 16px 0;
+            gap: 8px;
+        }
+        .map-title { font-size: 18px; }
+        .map-filters {
+            order: 3;
+            flex: 0 0 100%;          /* volle Zeilenbreite erzwingen (überschreibt flex:1 aus der Basis) */
+            flex-wrap: nowrap; overflow-x: auto;
+            padding-bottom: 10px;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .map-filters::-webkit-scrollbar { display: none; }
+        .map-filter { flex-shrink: 0; }
+        .map-close { margin-left: auto; }
+    }
 
     /* ════════════════════════════════════
        ADMIN OVERLAY
